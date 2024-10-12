@@ -90,7 +90,7 @@ INSERT INTO student (name, date_of_birth, parent_id) VALUES ("John Wick","1982-0
 DELETE FROM parents WHERE parent_id = 1;
 
 -- DROP: delete a table -- 
-DROP TABLE parents;
+DROP TABLE parents; -- will not work as there is a reference key that is being in use. 
 
 
 -- use DESCRIBE to show fields and definition of a table--
