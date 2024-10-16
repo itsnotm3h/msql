@@ -101,7 +101,111 @@ JOIN offices
 ON employees.officeCode = offices.officeCode;
 
 -- nuggets, join by alias-- 
+-- Join must always be before Where
 SELECT customerName, e.firstName, e.lastName, o.country, o.city from customers as c  JOIN employees as e
 ON c.salesRepEmployeeNumber = e.employeeNumber
 JOIN offices as o
 ON e.officeCode = o.officeCode;
+
+
+-- INNER JOIN
+-- When you join a table on the right hand side had on a value, so if it is a null it will not be included. 
+SELECT COUNT(*) FROM customers JOIN employees
+ON customers.salesRepEmployeeNumber = employees.employeeNumber
+
+
+-- LEFT JOIN: ALL rows on the LHS of the join will be included
+-- RIGHT JOIN: Does the same but on the RHS.
+
+SELECT * FROM customers LEFT JOIN employees
+ON customers.salesRepEmployeeNumber = employees.employeeNumber
+
+-- FULL OUTER JOIN is a combination of left join and right join, but it is not supported in MYSQL.
+
+-- DATES
+-- On of the most troublesome thing to do. LOL
+-- MYSQL uses the ISO date standard: YYYY-MM-DD
+-- MYSQL wiil auto convert "" into a date. 
+
+-- Find all orders before 2024-01-01
+SELECT * FROM orders WHERE orderDate < "2024-01-01";
+
+SELECT * FROM orders WHERE orderDate >= "2003-06-01" AND orderDate <= "2003-06-30";
+
+-- Alternative answers:
+SELECT * FROM orders WHERE orderDate BETWEEN "2003-06-01" AND "2003-06-30";
+SELECT orderNumber, YEAR(orderDate) ,MONTH(orderDate),DAY(orderDate) FROM orders;
+SELECT * FROM orders WHERE MONTH(orderDate) = 6 AND YEAR(orderDate) = 2003;
+
+-- for every order, calculate the penalty date which is 14 days from order date. 
+-- there is DATE_ADD, DATE_SUBTRACT, DATE_DIFF
+SELECT orderNumber, orderDate, DATE_ADD(orderDate, INTERVAL 14 DAY) FROM orders;
+
+-- When we want to find out how many days that its late:
+SELECT orderNumber, requiredDate, shippedDate, shippedDate - requiredDate AS "Days Late By" FROM orders WHERE shippedDate > requiredDate;
+
+--TIME ZONE, set time zone to SGT in time and then when you retrieve use javascript to convert to their timezone. Vice versa, before storing and send it out. 
+
+
+-- AGGREGRATES
+-- COUNT: Number of rows;
+-- SUM the COLUMNS 
+SELECT SUM(creditLimit) from customers;
+SELECT SUM(amount) FROM payments WHERE customerNumber = 112;
+
+-- AVG: Averange
+SELECT AVG(creditLimit) from customers;
+
+-- MIN: Need to use it with a where to excluede all values with 0, otherwise it will show 0;
+SELECT MIN(creditLimit) from customers where creditLimit > 0;
+
+-- REQUIREMENT: how many employees are stationed at each office;
+-- DISINCT: to show values without a duplicate values. 
+-- for each office count how many employees there are per office. 
+SELECT count(*), officeCode FROM employees
+GROUP BY officeCode;
+
+-- GROUPBY happen after join and where but before select;
+-- How it works:
+-- 1. MYSQL will create a group for each office code. 
+-- 2. ASSIGN the value with the same office code to the groups they belong to.
+
+
+-- for each office, count how mnay employees there
+
+-- 1. Figure the column we are grouping by.
+-- 2. Whatever column we group by, we MUST select
+-- 3. What are we aggrating. 
+
+SELECT salesRepEmployeeNumber, count(*) from customers
+GROUP By salesRepEmployeeNumber HAVING salesRepEmployeeNumber != "";
+
+-- We want to know, for every customers, how much have they paid us.
+SELECT customerNumber, SUM(amount) FROM payments
+GROUP BY customerNumber;
+
+-- HAVING allow us to fliter by groups.
+SELECT customerNumber, SUM(amount) FROM payments
+GROUP BY customerNumber
+HAVING sum(amount) > 50000;
+
+-- order of precedences
+-- 1. FROM,JOIN
+-- 2. WHERE
+-- 3. GROUP BY
+-- 4. SELECT
+-- 5. HAVING
+-- 6. DISTINCT
+-- 7. ORDER BY
+-- 8. LIMIT,OFFSET
+
+
+-- We want to know, for every customers, how much have they paid us.
+SELECT payments.customerNumber,customers.customerName, SUM(amount) AS "Total Paid" FROM payments
+JOIN customers ON payments.customerNumber = customers.customerNumber
+WHERE customers.country="USA"
+GROUP BY payments.customerNumber
+HAVING `Total Paid` > 50000
+ORDER BY customers.customerNumber ASC
+LIMIT 10;
+
